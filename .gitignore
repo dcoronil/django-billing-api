@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Django generated assets
+staticfiles/
+
+# Local database and environment
+*.sqlite3
+.env

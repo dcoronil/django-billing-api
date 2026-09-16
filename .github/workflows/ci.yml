@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, chore/**]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Django checks
+        env:
+          DJANGO_SECRET_KEY: ci-only-secret
+          DJANGO_DEBUG: '0'
+          DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1`n          DJANGO_TESTING: '1'
+        run: python manage.py check
+      - name: Tests
+        env:
+          DJANGO_SECRET_KEY: ci-only-secret
+          DJANGO_DEBUG: '0'
+          DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1`n          DJANGO_TESTING: '1'
+        run: python manage.py test
+
