@@ -18,7 +18,7 @@ else:
 PY
 
 python manage.py migrate --noinput
-python manage.py collectstatic --noinput || true
+python manage.py collectstatic --noinput
 
 # Dev server (simple). You can replace with gunicorn if desired.
 python manage.py runserver 0.0.0.0:8000

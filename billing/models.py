@@ -47,12 +47,15 @@ class Invoice(models.Model):
         unit_price_per_liter: Decimal,
         description: str,
     ) -> "InvoiceLine":
+        barrel = Barrel.objects.select_for_update().get(pk=barrel.pk)
         if liters <= 0:
             raise ValueError("liters must be > 0")
         if unit_price_per_liter <= 0:
             raise ValueError("unit_price must be > 0")
         if barrel.provider_id != self.provider_id:
             raise ValueError("barrel provider must match invoice provider")
+        if barrel.billed or barrel.invoice_lines.exists():
+            raise ValueError("barrel has already been billed")
         if barrel.liters != liters:
             raise ValueError("liters must equal barrel.liters to bill the full barrel")
 
