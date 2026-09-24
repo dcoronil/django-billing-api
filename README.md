@@ -1,4 +1,4 @@
-# Lab3
+# django-billing-api
 
 ## Overview
 
@@ -33,7 +33,12 @@ flowchart LR
 
 ## Running locally
 
-Copy `.env.example` to `.env` for a simple development setup, then run:
+Clone the repository and copy `.env.example` to `.env` for a simple development setup, then run:
+
+```bash
+git clone https://github.com/dcoronil/django-billing-api.git
+cd django-billing-api
+```
 
 ```bash
 docker compose up --build
