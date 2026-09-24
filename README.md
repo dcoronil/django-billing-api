@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lab3 is a small academic billing API built with Django REST Framework. It models providers, oil barrels, invoices and invoice lines, with JWT authentication and provider-scoped access.
+django-billing-api is a small academic billing API built with Django REST Framework. It models providers, oil barrels, invoices and invoice lines, with JWT authentication and provider-scoped access.
 
 ## Architecture
 
