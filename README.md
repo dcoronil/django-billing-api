@@ -1,5 +1,7 @@
 # django-billing-api
 
+[![CI](https://github.com/dcoronil/django-billing-api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dcoronil/django-billing-api/actions/workflows/ci.yml)
+
 ## Overview
 
 django-billing-api is a small academic billing API built with Django REST Framework. It models providers, oil barrels, invoices and invoice lines, with JWT authentication and provider-scoped access.
