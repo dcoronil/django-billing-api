@@ -47,6 +47,34 @@ class BillingApiTestCase(APITestCase):
 
 
 class InvoiceIntegrationTests(BillingApiTestCase):
+    def test_add_line_rejects_billing_the_same_barrel_twice(self):
+        provider = self.create_provider("A")
+        user = self.create_user("a", provider=provider)
+        barrel = self.create_barrel(provider, "A", liters=120)
+        invoice = self.create_invoice(provider, "A")
+        invoice.add_line_for_barrel(
+            barrel=barrel,
+            liters=120,
+            unit_price_per_liter=Decimal("2.50"),
+            description="First billing",
+        )
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            reverse("invoice-add-line", args=[invoice.id]),
+            {
+                "barrel": barrel.id,
+                "liters": 120,
+                "unit_price": "2.50",
+                "description": "Duplicate billing",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data["detail"]), "barrel has already been billed")
+        self.assertEqual(InvoiceLine.objects.count(), 1)
+
     def test_add_line_returns_400_when_barrel_provider_does_not_match_invoice_provider(self):
         provider_a = self.create_provider("A")
         provider_b = self.create_provider("B")

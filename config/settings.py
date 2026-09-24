@@ -1,11 +1,32 @@
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key")
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+TESTING = os.environ.get("DJANGO_TESTING") == "1"
+DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
+
+configured_secret = os.environ.get("DJANGO_SECRET_KEY")
+if not configured_secret:
+    if DEBUG or TESTING:
+        SECRET_KEY = "dev-only-insecure-key"
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DEBUG is disabled")
+else:
+    SECRET_KEY = configured_secret
+
+if not DEBUG and SECRET_KEY == "dev-only-insecure-key":
+    raise ImproperlyConfigured("The development SECRET_KEY cannot be used with DEBUG disabled")
+
+configured_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS")
+if configured_hosts is None and not DEBUG and not TESTING:
+    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be set when DEBUG is disabled")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in (configured_hosts or "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -52,16 +73,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "billing_db"),
-        "USER": os.environ.get("POSTGRES_USER", "billing_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "billing_pass"),
+if TESTING:
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "test.sqlite3"}}
+else:
+    postgres_values = {
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
         "HOST": os.environ.get("POSTGRES_HOST", "db"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
-}
+    missing_postgres = [key for key in ("NAME", "USER", "PASSWORD") if not postgres_values[key]]
+    if missing_postgres and not DEBUG:
+        raise ImproperlyConfigured(
+            "PostgreSQL settings are required when DEBUG is disabled: "
+            + ", ".join(missing_postgres)
+        )
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": postgres_values["NAME"] or "billing_db",
+            "USER": postgres_values["USER"] or "billing_user",
+            "PASSWORD": postgres_values["PASSWORD"] or "billing_pass",
+            "HOST": postgres_values["HOST"],
+            "PORT": postgres_values["PORT"],
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = []
 
